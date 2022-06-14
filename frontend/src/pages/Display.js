@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
 import * as XLSX from "xlsx";
 
 export default function Display() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:1337/api/characters", {
+    fetch("http://localhost:1337/characters", {
       headers: {
         "Content-Type": "application/json",
       },
     })
       .then((res) => res.json())
-      .then((data) => setData(data.data.map((details) => details.attributes)));
+      .then((data) => setData(data));
   }, []);
 
   const onChange = (e) => {
@@ -25,27 +24,35 @@ export default function Display() {
       const wb = XLSX.read(bstr, { type: "binary" });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
+      let excelRowsObjArr = XLSX.utils.sheet_to_row_object_array(ws);
 
-      for (let i = 2; i < 99; i++) {
-        const firstName = ws[`A${i}`].v;
-        const lastName = ws[`B${i}`].v;
-        const age = ws[`C${i}`].v;
+      let array = [];
 
-        fetch("http://localhost:1337/api/characters", {
+      try {
+        for (let i = 2; i <= excelRowsObjArr.length + 1; i++) {
+          let firstName = ws[`A${i}`].v;
+          let lastName = ws[`B${i}`].v;
+          let age = ws[`C${i}`].v;
+          let details = {
+            firstName: firstName,
+            lastName: lastName,
+            age: age,
+          };
+          array.push(details);
+        }
+        fetch("http://localhost:1337/characters/upload", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            data: {
-              firstName: firstName,
-              lastName: lastName,
-              age: age,
-            },
-          }),
+          body: JSON.stringify(array),
         })
           .then((res) => res.json())
           .then((data) => data);
+
+        window.location.reload(false);
+      } catch (error) {
+        console.log("error", error);
       }
     };
   };
