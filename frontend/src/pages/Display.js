@@ -18,21 +18,15 @@ export default function Display() {
 
   const onChange = async (e) => {
     e.preventDefault();
-    console.log("hello", e.target.files);
+    console.log(e.target.files[0]);
 
     const data = new FormData();
-    data.append("files", e.target.files);
+    data.append("files", e.target.files[0]);
 
-    const upload_res = await axios({
+    await fetch("http://localhost:1337/characters/excel", {
       method: "POST",
-      url: "http://localhost:1337/characters/excel",
-      data,
-      onUploadProgress: (progress) => ({
-        percent: percent(progress.loaded, progress.total),
-      }),
+      body: data,
     });
-
-    console.log("Display.onChange upload_res", upload_res);
   };
 
   return (
