@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
+import axios from "axios";
 
 export default function Display() {
   const [data, setData] = useState([]);
+
+  const percent = (value, total) => Math.round((value / total) * 100);
 
   useEffect(() => {
     fetch("http://localhost:1337/characters", {
@@ -14,47 +16,23 @@ export default function Display() {
       .then((data) => setData(data));
   }, []);
 
-  const onChange = (e) => {
-    const [file] = e.target.files;
-    const reader = new FileReader();
-    reader.readAsBinaryString(file);
+  const onChange = async (e) => {
+    e.preventDefault();
+    console.log("hello", e.target.files);
 
-    reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: "binary" });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      let excelRowsObjArr = XLSX.utils.sheet_to_row_object_array(ws);
+    const data = new FormData();
+    data.append("files", e.target.files);
 
-      let array = [];
+    const upload_res = await axios({
+      method: "POST",
+      url: "http://localhost:1337/characters/excel",
+      data,
+      onUploadProgress: (progress) => ({
+        percent: percent(progress.loaded, progress.total),
+      }),
+    });
 
-      try {
-        for (let i = 2; i <= excelRowsObjArr.length + 1; i++) {
-          let firstName = ws[`A${i}`].v;
-          let lastName = ws[`B${i}`].v;
-          let age = ws[`C${i}`].v;
-          let details = {
-            firstName: firstName,
-            lastName: lastName,
-            age: age,
-          };
-          array.push(details);
-        }
-        fetch("http://localhost:1337/characters/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(array),
-        })
-          .then((res) => res.json())
-          .then((data) => data);
-
-        window.location.reload(false);
-      } catch (error) {
-        console.log("error", error);
-      }
-    };
+    console.log("Display.onChange upload_res", upload_res);
   };
 
   return (

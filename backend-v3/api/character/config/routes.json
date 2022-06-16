@@ -41,6 +41,14 @@
       }
     },
     {
+      "method": "POST",
+      "path": "/characters/excel",
+      "handler": "character.excel",
+      "config": {
+        "policies": []
+      }
+    },
+    {
       "method": "PUT",
       "path": "/characters/:id",
       "handler": "character.update",
